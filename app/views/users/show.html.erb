@@ -1,0 +1,91 @@
+<div class="jumbotron">
+  <h3><%= @user.username %></h3>
+</div>
+<% if current_user.id == @user.id %>
+<div class="page-header">
+  <a href="/photos/new" class="btn btn-default btn-group-justified"><i class="fa fa-plus" aria-hidden="true"></i></a>
+</div>
+<% end%>
+<div class="row">
+
+  <% @user.photos.each do |photo| %>
+  <div class="col-md-8 col-md-offset-2">
+
+    <div class="panel panel-default">
+      <div class="panel-heading"><%= User.find_by( :id => photo.user_id ).username %></div>
+      <% if current_user.id == photo.user_id %>
+      <h3>
+        <a href="/photos/<%= photo.id %>/edit"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a>
+        <a href="/delete_photo/<%= photo.id %>"><i class="fa fa-trash-o" aria-hidden="true"></i></a>
+      </h3>
+      <%end%>
+      <div class="panel-body">
+        <div><img src="<%= photo.image %>" class="img-responsive" alt="<%=photo.caption%>"></img></div>
+        <!-- post caption -->
+        <div><%= photo.caption %></div>
+        <!-- likes -->
+        <input name="authenticity_token" type="hidden" value="<%= form_authenticity_token %>">
+
+        <input type="hidden" name="photo_id" value="<%=photo.id%>">
+
+        <input type="hidden" name="user_id" value="<%=photo.user.id%>">
+        <% @like = photo.likes.find_by(:user_id=>current_user.id, :photo_id=>photo.id) %>
+        <button class="btn btn-link">
+          <% if  photo.fans.pluck(:user_id).include? current_user.id%>
+          <a href="/delete_like/<%= @like.id %>"><i class="fa fa-heart"></i></a>
+          <% else %>
+          <a href="/add_like/<%=current_user.id%>/<%=photo.id%>"><i class="fa fa-heart-o"></i> </a>        <% end %>
+        </button>
+
+        <small class="text-muted">
+          <% if  photo.likes.count == 0%>
+          be the first to like this
+          <% else %>
+          <%= photo.fans.pluck(:username).to_sentence %> like this
+          <% end %>
+        </small>
+
+        <div>
+          <a href="/users/<%= photo.user.id %>"><%= photo.user.username %></a>
+          <small><%= time_ago_in_words( photo.created_at ) %> ago</small>
+        </div>
+
+        <!-- comments -->
+        <% photo.comments.each do |comment| %>
+        <div>
+          <a href="/users/<%= comment.user.id %>"><%= comment.user.username %></a>
+          <small><%= time_ago_in_words( comment.created_at ) %> ago</small>
+        </div>
+        <div><%= comment.body %></div>
+        <% end %>
+
+        <!-- add comment -->
+        <form action="/create_comment" method="post">
+          <!-- Hidden input for authenticity token to protect from forgery -->
+          <input name="authenticity_token" type="hidden" value="<%= form_authenticity_token %>">
+
+          <!-- Label and input for photo_id -->
+            <input type="hidden" name="photo_id" value="<%= photo.id %>">
+
+          <!-- Label and input for body -->
+          <input type="text" id="body" name="body" placeholder='Add a comment...' class="form-control" required>
+          <div class="input-group-btn">
+            <button class="btn btn-success">
+              <i class="fa fa-commenting-o"></i>
+            </button>
+          </div>
+
+          <!-- Label and input for user_id -->
+            <input type="hidden" name="user_id" value="<%= current_user.id %>">
+
+
+        </form>
+
+
+
+      </div>
+    </div>
+
+  </div>
+<% end %>
+</div>
